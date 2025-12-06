@@ -1,0 +1,112 @@
+//suffic tree brute force
+#include <iostream>
+#include <string>
+#include <map>
+using namespace std;
+
+struct TrieNode {
+    map<char, TrieNode*> children;
+    bool isEndOfWord;
+    
+    TrieNode() {
+        isEndOfWord = false;
+    }
+};
+
+class SuffixTrie {
+private:
+    TrieNode* root;
+    
+    void insertSuffix(string suffix) {
+        TrieNode* current = root;
+        for (int i = 0; i < suffix.length(); i++) {
+            char c = suffix[i];
+            if (current->children.find(c) == current->children.end()) {
+                current->children[c] = new TrieNode();
+            }
+            current = current->children[c];
+        }
+        current->isEndOfWord = true;
+    }
+    
+    void displayHelper(TrieNode* node, string prefix) {
+        if (node->isEndOfWord) {
+            cout << prefix << endl;
+        }
+        for (auto& pair : node->children) {
+            displayHelper(pair.second, prefix + pair.first);
+        }
+    }
+    
+public:
+    SuffixTrie() {
+        root = new TrieNode();
+    }
+    
+    // Brute Force Suffix Trie construction
+    void bruteForceSuffixTrie(string text) {
+        int n = text.length();
+        // Insert all suffixes into the trie
+        for (int i = 0; i < n; i++) {
+            string suffix = text.substr(i);
+            insertSuffix(suffix);
+        }
+    }
+    
+    bool search(string pattern) {
+        TrieNode* current = root;
+        for (int i = 0; i < pattern.length(); i++) {
+            char c = pattern[i];
+            if (current->children.find(c) == current->children.end()) {
+                return false;
+            }
+            current = current->children[c];
+        }
+        return true;
+    }
+    
+    void displayAllSuffixes() {
+        cout << "All suffixes in trie:" << endl;
+        displayHelper(root, "");
+    }
+};
+
+int main() {
+    string text;
+    cout << "Enter the text: ";
+    getline(cin, text);
+    
+    SuffixTrie trie;
+    trie.bruteForceSuffixTrie(text);
+    
+    cout << "\nSuffix Trie built successfully!" << endl;
+    trie.displayAllSuffixes();
+    
+    int choice;
+    string pattern;
+    
+    while (true) {
+        cout << "\n1. Search pattern\n2. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+        cin.ignore();
+        
+        switch (choice) {
+            case 1:
+                cout << "Enter pattern to search: ";
+                getline(cin, pattern);
+                if (trie.search(pattern)) {
+                    cout << "Pattern found!" << endl;
+                } else {
+                    cout << "Pattern not found!" << endl;
+                }
+                break;
+            case 2:
+                return 0;
+            default:
+                cout << "Invalid choice!" << endl;
+        }
+    }
+    
+    return 0;
+}
