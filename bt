@@ -1,0 +1,186 @@
+//B Tree
+#include <iostream>
+using namespace std;
+
+const int T = 3; // Minimum degree
+
+struct BTreeNode {
+    int keys[2 * T - 1];
+    BTreeNode* children[2 * T];
+    int n;       // Current number of keys
+    bool leaf;
+    
+    BTreeNode(bool isLeaf) {
+        leaf = isLeaf;
+        n = 0;
+        for (int i = 0; i < 2 * T; i++) {
+            children[i] = nullptr;
+        }
+    }
+};
+
+class BTree {
+private:
+    BTreeNode* root;
+    
+    void splitChild(BTreeNode* x, int i) {
+        BTreeNode* y = x->children[i];
+        BTreeNode* z = new BTreeNode(y->leaf);
+        z->n = T - 1;
+        
+        for (int j = 0; j < T - 1; j++) {
+            z->keys[j] = y->keys[j + T];
+        }
+        
+        if (!y->leaf) {
+            for (int j = 0; j < T; j++) {
+                z->children[j] = y->children[j + T];
+            }
+        }
+        
+        y->n = T - 1;
+        
+        for (int j = x->n; j >= i + 1; j--) {
+            x->children[j + 1] = x->children[j];
+        }
+        x->children[i + 1] = z;
+        
+        for (int j = x->n - 1; j >= i; j--) {
+            x->keys[j + 1] = x->keys[j];
+        }
+        x->keys[i] = y->keys[T - 1];
+        x->n++;
+    }
+    
+    void insertNonFull(BTreeNode* x, int k) {
+        int i = x->n - 1;
+        
+        if (x->leaf) {
+            while (i >= 0 && k < x->keys[i]) {
+                x->keys[i + 1] = x->keys[i];
+                i--;
+            }
+            x->keys[i + 1] = k;
+            x->n++;
+        } else {
+            while (i >= 0 && k < x->keys[i]) {
+                i--;
+            }
+            i++;
+            
+            if (x->children[i]->n == 2 * T - 1) {
+                splitChild(x, i);
+                if (k > x->keys[i]) {
+                    i++;
+                }
+            }
+            insertNonFull(x->children[i], k);
+        }
+    }
+    
+    BTreeNode* search(BTreeNode* x, int k) {
+        int i = 0;
+        while (i < x->n && k > x->keys[i]) {
+            i++;
+        }
+        
+        if (i < x->n && k == x->keys[i]) {
+            return x;
+        }
+        
+        if (x->leaf) {
+            return nullptr;
+        }
+        
+        return search(x->children[i], k);
+    }
+    
+    void traverse(BTreeNode* x) {
+        int i;
+        for (i = 0; i < x->n; i++) {
+            if (!x->leaf) {
+                traverse(x->children[i]);
+            }
+            cout << x->keys[i] << " ";
+        }
+        if (!x->leaf) {
+            traverse(x->children[i]);
+        }
+    }
+    
+public:
+    BTree() {
+        root = nullptr;
+    }
+    
+    void insert(int k) {
+        if (root == nullptr) {
+            root = new BTreeNode(true);
+            root->keys[0] = k;
+            root->n = 1;
+        } else {
+            if (root->n == 2 * T - 1) {
+                BTreeNode* s = new BTreeNode(false);
+                s->children[0] = root;
+                root = s;
+                splitChild(s, 0);
+                insertNonFull(s, k);
+            } else {
+                insertNonFull(root, k);
+            }
+        }
+    }
+    
+    bool search(int k) {
+        if (root == nullptr) {
+            return false;
+        }
+        return search(root, k) != nullptr;
+    }
+    
+    void traverse() {
+        if (root != nullptr) {
+            traverse(root);
+        }
+        cout << endl;
+    }
+};
+
+int main() {
+    BTree tree;
+    int choice, key;
+    
+    while (true) {
+        cout << "\n1. Insert\n2. Search\n3. Display\n4. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+        
+        switch (choice) {
+            case 1:
+                cout << "Enter key to insert: ";
+                cin >> key;
+                tree.insert(key);
+                cout << "Key inserted." << endl;
+                break;
+            case 2:
+                cout << "Enter key to search: ";
+                cin >> key;
+                if (tree.search(key)) {
+                    cout << "Key found!" << endl;
+                } else {
+                    cout << "Key not found!" << endl;
+                }
+                break;
+            case 3:
+                cout << "B-Tree (in-order): ";
+                tree.traverse();
+                break;
+            case 4:
+                return 0;
+            default:
+                cout << "Invalid choice!" << endl;
+        }
+    }
+    
+    return 0;
+}
