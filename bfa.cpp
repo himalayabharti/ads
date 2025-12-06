@@ -1,0 +1,77 @@
+//Belman ford algoritham
+#include <iostream>
+#include <climits>
+using namespace std;
+
+struct Edge {
+    int src, dest, weight;
+};
+
+int main() {
+    int V, E;
+    cout << "Enter number of vertices: ";
+    cin >> V;
+    cout << "Enter number of edges: ";
+    cin >> E;
+    
+    Edge* edges = new Edge[E];
+    
+    cout << "Enter edges (source destination weight):" << endl;
+    for (int i = 0; i < E; i++) {
+        cin >> edges[i].src >> edges[i].dest >> edges[i].weight;
+    }
+    
+    int source;
+    cout << "Enter source vertex: ";
+    cin >> source;
+    
+    int* dist = new int[V];
+    for (int i = 0; i < V; i++) {
+        dist[i] = INT_MAX;
+    }
+    dist[source] = 0;
+    
+    // Relax all edges V-1 times
+    for (int i = 0; i < V - 1; i++) {
+        for (int j = 0; j < E; j++) {
+            int u = edges[j].src;
+            int v = edges[j].dest;
+            int w = edges[j].weight;
+            
+            if (dist[u] != INT_MAX && dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+            }
+        }
+    }
+    
+    // Check for negative weight cycles
+    bool hasNegativeCycle = false;
+    for (int j = 0; j < E; j++) {
+        int u = edges[j].src;
+        int v = edges[j].dest;
+        int w = edges[j].weight;
+        
+        if (dist[u] != INT_MAX && dist[u] + w < dist[v]) {
+            hasNegativeCycle = true;
+            break;
+        }
+    }
+    
+    if (hasNegativeCycle) {
+        cout << "Graph contains negative weight cycle!" << endl;
+    } else {
+        cout << "\nShortest distances from source " << source << ":" << endl;
+        for (int i = 0; i < V; i++) {
+            cout << "Vertex " << i << ": ";
+            if (dist[i] == INT_MAX) {
+                cout << "INF" << endl;
+            } else {
+                cout << dist[i] << endl;
+            }
+        }
+    }
+    
+    delete[] edges;
+    delete[] dist;
+    return 0;
+}
